@@ -1,0 +1,10 @@
+.DS_Store
+.git
+*.zip
+*.gzip
+.idea
+.svn
+*.log
+node_modules
+bower_components
+workspace/*

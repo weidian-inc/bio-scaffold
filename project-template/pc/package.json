@@ -1,0 +1,10 @@
+{
+  "name": "demo",
+  "version": "1.0.0",
+  "description": "bio project",
+  "scripts": {
+    "daily": "npm install bio-cli && bio run build-daily -n",
+    "pre": "npm install bio-cli && bio run build-pre -n",
+    "prod": "npm install bio-cli && bio run build-prod -n"
+  }
+}
