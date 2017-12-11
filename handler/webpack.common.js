@@ -27,8 +27,6 @@ module.exports = ({ context, fastConfig }) => {
         return entryFiles;
     };
 
-    // console.log({ replace, webpackConfig });
-
     const getReplaceLoader = (replaceObj) => {
         const replacements = [];
 
@@ -74,7 +72,7 @@ module.exports = ({ context, fastConfig }) => {
                     srcDir,
                 ],
             }, {
-                test: /\.[(js)(html)]*$/,
+                test: /\.[(js)(vue)(vuex)(html)]*$/,
                 exclude: /(node_modules|bower_components)/,
                 loader: getReplaceLoader(replace, taskName),
             }],

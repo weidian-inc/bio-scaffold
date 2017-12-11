@@ -18,39 +18,6 @@ module.exports = (context) => {
     const common = require('./webpack.common')({ context, fastConfig });
 
     const finalWebpackConfig = merge(common, {
-        module: {
-            rules: [{
-                test: /\.css$/,
-                use: ExtractTextPlugin.extract({
-                    use: ['css-loader?minimize', 'postcss-loader'],
-                    fallback: 'vue-style-loader',
-                }),
-            }, {
-                test: /\.less$/,
-                use: ExtractTextPlugin.extract({
-                    use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
-                    fallback: 'vue-style-loader',
-                }),
-            }, {
-                test: /\.vue$/,
-                loader: 'vue-loader',
-                include: [
-                    srcDir,
-                ],
-                options: {
-                    loaders: {
-                        css: ExtractTextPlugin.extract({
-                            use: ['css-loader?minimize', 'postcss-loader'],
-                            fallback: 'vue-style-loader',
-                        }),
-                        less: ExtractTextPlugin.extract({
-                            use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
-                            fallback: 'vue-style-loader',
-                        }),
-                    },
-                },
-            }],
-        },
         plugins: [
             new PluginPresetHtml({
                 srcDir,
@@ -81,6 +48,38 @@ module.exports = (context) => {
             }),
         ],
     });
+
+    finalWebpackConfig.module.rules.unshift({
+            test: /\.css$/,
+            use: ExtractTextPlugin.extract({
+                use: ['css-loader?minimize', 'postcss-loader'],
+                fallback: 'vue-style-loader',
+            }),
+        }, {
+            test: /\.less$/,
+            use: ExtractTextPlugin.extract({
+                use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
+                fallback: 'vue-style-loader',
+            }),
+        }, {
+            test: /\.vue$/,
+            loader: 'vue-loader',
+            include: [
+                srcDir,
+            ],
+            options: {
+                loaders: {
+                    css: ExtractTextPlugin.extract({
+                        use: ['css-loader?minimize', 'postcss-loader'],
+                        fallback: 'vue-style-loader',
+                    }),
+                    less: ExtractTextPlugin.extract({
+                        use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
+                        fallback: 'vue-style-loader',
+                    }),
+                },
+            },
+        });
 
     console.log('Compiling...');
     webpack(finalWebpackConfig, (err) => {

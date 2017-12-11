@@ -24,25 +24,6 @@ module.exports = (context) => {
 
     let isFirstBuild = true;
     const finalWebpackConfig = merge.smart(common, {
-        module: {
-            rules: [{
-                test: /\.css$/,
-                use: ['vue-style-loader', 'css-loader', 'postcss-loader'],
-            }, {
-                test: /\.less$/,
-                use: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
-            }, {
-                test: /\.vue$/,
-                loader: 'vue-loader',
-                include: [srcDir],
-                options: {
-                    loaders: {
-                        css: ['vue-style-loader', 'css-loader', 'postcss-loader'],
-                        less: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
-                    },
-                },
-            }],
-        },
         plugins: [
             new PluginPresetHtml({
                 srcDir,
@@ -74,6 +55,24 @@ module.exports = (context) => {
             }),
         ],
     });
+
+    finalWebpackConfig.module.rules.unshift({
+            test: /\.css$/,
+            use: ['vue-style-loader', 'css-loader', 'postcss-loader'],
+        }, {
+            test: /\.less$/,
+            use: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
+        }, {
+            test: /\.vue$/,
+            loader: 'vue-loader',
+            include: [srcDir],
+            options: {
+                loaders: {
+                    css: ['vue-style-loader', 'css-loader', 'postcss-loader'],
+                    less: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
+                },
+            },
+        });
 
     const server = new WebpackDevServer(webpack(finalWebpackConfig), {
         contentBase: distDir,
