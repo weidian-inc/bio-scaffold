@@ -44,3 +44,29 @@ Quick Start:
     ```
     bio run dev-daily
     ```
+
+## project tree
+
+```
+pages/
+    index/
+        index.html
+        index.js
+        index.less
+    detail/
+        index.html
+        index.js
+        index.less
+```
+
+## build output
+
+```
+dist/
+    pages/
+        index.html
+        detail.html
+    static/
+        index/index.js
+        detail/index.js
+```
