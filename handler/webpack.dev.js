@@ -5,7 +5,6 @@ module.exports = (context) => {
     const WebpackDevServer = require('webpack-dev-server');
 
     const PluginCreateBlankCss = require('./plugin-create-blank-css');
-    const PluginAddDevServer = require('./plugin-add-dev-server');
     const PluginPresetHtml = require('./plugin-preset-html');
 
     const path = require('path');
@@ -31,10 +30,6 @@ module.exports = (context) => {
                 watch: true,
                 replace,
                 taskName,
-            }),
-            new PluginAddDevServer({
-                entryObj: common.entry,
-                port,
             }),
             new PluginCreateBlankCss({
                 entryObj: common.entry,
@@ -73,6 +68,10 @@ module.exports = (context) => {
                 },
             },
         });
+
+    Object.keys(finalWebpackConfig.entry).forEach((key) => {
+        finalWebpackConfig.entry[key].unshift(`webpack-dev-server/client?http://localhost:${port}`, 'webpack/hot/dev-server');
+    });
 
     const server = new WebpackDevServer(webpack(finalWebpackConfig), {
         contentBase: distDir,
