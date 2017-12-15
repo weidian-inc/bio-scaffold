@@ -20,7 +20,10 @@ module.exports = ({ context, fastConfig }) => {
             const indexFile = path.join(srcDir, 'pages', dirname, 'index.js');
 
             if (state.isDirectory(file) && fs.existsSync(indexFile)) {
-                entryFiles[`${dirname}/index`] = [indexFile];
+                entryFiles[`${dirname}/index`] = [
+                    'babel-polyfill',
+                    indexFile
+                ];
             }
         });
 
