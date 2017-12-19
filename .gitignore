@@ -8,3 +8,4 @@
 node_modules
 bower_components
 workspace/*
+package-lock.json
