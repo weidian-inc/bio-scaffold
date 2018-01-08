@@ -6,6 +6,7 @@ module.exports = (context) => {
 
     const PluginCreateBlankCss = require('./plugin-create-blank-css');
     const PluginPresetHtml = require('./plugin-preset-html');
+    const WriteFilesFromMemory = require('./plugin-write-files-from-memory');
 
     const path = require('path');
 
@@ -48,6 +49,7 @@ module.exports = (context) => {
                     }, 1000);
                 }
             }),
+            new WriteFilesFromMemory(),
         ],
     });
 
