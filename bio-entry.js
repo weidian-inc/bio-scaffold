@@ -13,7 +13,7 @@ require('bio-helper')(process)((context) => {
     case 'build-prod':
         break;
     default:
-        console.log(`task ${context.taskName} is not supported. Task supported list:\n\n${[
+        console.log(`task "${context.taskName}" (via "bio run ${context.taskName}") is not supported. Task supported list:\n\n${[
             '-  dev-daily                  dev daily',
             '-  dev-pre                    dev pre',
             '-  dev-prod                   dev prod',

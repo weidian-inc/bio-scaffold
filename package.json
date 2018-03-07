@@ -47,5 +47,5 @@
         "node": ">=8.9.1"
     },
     "name": "bio-scaffold-vue",
-    "version": "1.0.8"
+    "version": "1.0.9"
 }

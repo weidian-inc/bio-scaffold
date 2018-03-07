@@ -6,7 +6,7 @@ module.exports = ({ userDir, srcDir, distDir, taskName, webpack, webpackDevServe
     return {
         distDir: './dist', // dist dir; default is './dist'
 
-        port: 9000, // debug port; default is 9000
+        // port: 9000, // debug port; default is 9000
 
         replace: {
             $$_CDNURL_$$: {
