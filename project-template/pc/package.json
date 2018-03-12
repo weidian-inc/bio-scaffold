@@ -3,8 +3,14 @@
   "version": "1.0.0",
   "description": "bio project",
   "scripts": {
-    "daily": "npm install bio-cli && bio run build-daily -n",
-    "pre": "npm install bio-cli && bio run build-pre -n",
-    "prod": "npm install bio-cli && bio run build-prod -n"
+    "dev-daily": "bio run dev-daily",
+    "dev-pre": "bio run dev-pre",
+    "dev-prod": "bio run dev-prod",
+    "build-daily": "bio run build-daily -n",
+    "build-pre": "bio run build-pre -n",
+    "build-prod": "bio run build-prod -n"
+  },
+  "dependencies": {
+    "bio-cli": "^1.0.3"
   }
 }
