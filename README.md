@@ -1,5 +1,7 @@
 ## This is a bio scaffold.
 
+[What is bio?](https://github.com/weidian-inc/bio-cli)
+
 `bio-entry.js` is the file that bio runs scaffold.
 
 `project-template/` is demo dir.
