@@ -6,9 +6,11 @@
             {
                 "useBuiltIns": true
             }
-        ]
+        ],
+        "transform-decorators-legacy"
     ],
     "presets": [
-        "env"
+        "env",
+        "stage-0"
     ]
 }
