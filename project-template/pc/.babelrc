@@ -1,0 +1,16 @@
+{
+    "plugins": [
+        "transform-object-assign",
+        [
+            "transform-object-rest-spread",
+            {
+                "useBuiltIns": true
+            }
+        ],
+        "transform-decorators-legacy"
+    ],
+    "presets": [
+        "env",
+        "stage-0"
+    ]
+}
