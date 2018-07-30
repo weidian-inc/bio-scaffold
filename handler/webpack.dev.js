@@ -22,7 +22,7 @@ module.exports = (context) => {
 
     const common = require('./webpack.common')({ context, fastConfig });
 
-    let isFirstBuild = true;
+    let onbuildLogTimer = null;
     const finalWebpackConfig = merge.smart(common, {
         plugins: [
             new PluginPresetHtml({
@@ -38,16 +38,14 @@ module.exports = (context) => {
             }),
             new webpack.HotModuleReplacementPlugin(),
             new WebpackOnBuildPlugin(() => {
-                if (isFirstBuild) {
-                    isFirstBuild = false;
-                    const timer = setTimeout(() => {
-                        console.log([
-                            `debug url 1: http://localhost:${port}/pages/index.html`,
-                            `debug url 2: http://127.0.0.1:${port}/pages/index.html`,
-                        ].join('\n'));
-                        clearTimeout(timer);
-                    }, 1000);
-                }
+                onbuildLogTimer = setTimeout(() => {
+                    console.log([
+                        `debug url 1: http://localhost:${port}/pages/index.html`,
+                        `debug url 2: http://127.0.0.1:${port}/pages/index.html`,
+                    ].join('\n'));
+
+                    clearTimeout(onbuildLogTimer);
+                }, 1000);
             }),
             new WriteFilePlugin(),
         ],
