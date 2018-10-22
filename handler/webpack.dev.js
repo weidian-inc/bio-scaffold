@@ -79,10 +79,7 @@ module.exports = (context) => {
         historyApiFallback: true,
         quiet: false,
         noInfo: false,
-        stats: {
-            chunks: false,
-            colors: true,
-        },
+        stats: 'errors-only',
         publicPath: finalWebpackConfig.output.publicPath,
         disableHostCheck: true,
         watchOptions: {
@@ -91,6 +88,6 @@ module.exports = (context) => {
         },
     });
 
-    console.log('Compiling...');
+    console.log('webpack: Compiling...');
     server.listen(port);
 };
