@@ -8,6 +8,7 @@ module.exports = (context) => {
     const PluginPresetHtml = require('./plugin-preset-html');
     const WriteFilePlugin = require('write-file-webpack-plugin');
 
+    const fs = require('fs');
     const path = require('path');
 
     // reset context
@@ -39,11 +40,20 @@ module.exports = (context) => {
             new webpack.HotModuleReplacementPlugin(),
             new WebpackOnBuildPlugin(() => {
                 onbuildLogTimer = setTimeout(() => {
-                    console.log([
-                        `debug url 1: http://localhost:${port}/pages/index.html`,
-                        `debug url 2: http://127.0.0.1:${port}/pages/index.html`,
-                    ].join('\n'));
+                    // 遍历 build 目录
+                    const pagesDir = path.join(distDir, 'pages');
+                    if (fs.existsSync(pagesDir) && fs.statSync(pagesDir)) {
+                        const pages = fs.readdirSync(pagesDir);
+                        const str = pages.map(pagePath => `http://localhost:${port}/pages/${pagePath}`).join('\n');
 
+                        if (pages.length === 0) {
+                            console.log(`no pages found...`.yellow);
+                        } else if (pages.length === 1) {
+                            pages.map(pagePath => console.log(`${'[debug url]'.green} http://localhost:${port}/pages/${pagePath}`));
+                        } else {
+                            pages.map((pagePath, index) => console.log(`${('[debug url ' + index + ']').green} http://localhost:${port}/pages/${pagePath}`));
+                        }
+                    }
                     clearTimeout(onbuildLogTimer);
                 }, 1000);
             }),
