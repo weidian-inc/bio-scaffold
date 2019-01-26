@@ -54,5 +54,5 @@
         "prepublish": "cp ./package.json ./.package.json && cp ./package-lock.json ./.package-lock.json"
     },
     "name": "bio-scaffold-vue",
-    "version": "1.0.17"
+    "version": "1.0.18"
 }
