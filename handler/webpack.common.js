@@ -42,6 +42,8 @@ module.exports = ({ srcDir, distDir, taskName, replace, webpackConfig }) => {
         });
     };
 
+    
+
     let commonWebpackConfig = {
         entry: getEntryObj(),
         output: {
@@ -49,6 +51,11 @@ module.exports = ({ srcDir, distDir, taskName, replace, webpackConfig }) => {
             filename: '[name].js',
             publicPath: '/static/',
             chunkFilename: '[name].js',
+        },
+        optimization: {
+            splitChunks: {
+                name: 'common.js'
+            }
         },
         module: {
             rules: [{
@@ -70,7 +77,7 @@ module.exports = ({ srcDir, distDir, taskName, replace, webpackConfig }) => {
                     srcDir,
                 ],
             }, {
-                test: /\.[(js)(vue)(vuex)(html)]*$/,
+                test: /\.[(js)(html)]*$/,
                 exclude: /(node_modules|bower_components)/,
                 loader: getReplaceLoader(replace, taskName),
             }],
@@ -94,11 +101,12 @@ module.exports = ({ srcDir, distDir, taskName, replace, webpackConfig }) => {
             new PluginClean({
                 distDir,
             }),
-            new webpack.optimize.CommonsChunkPlugin({
-                name: 'vendor',
-                filename: 'common.js',
-                minChunks: Infinity,
-            }),
+            
+            // new webpack.optimize.CommonsChunkPlugin({
+            //     name: 'vendor',
+            //     filename: 'common.js',
+            //     minChunks: Infinity,
+            // }),
         ],
     };
 

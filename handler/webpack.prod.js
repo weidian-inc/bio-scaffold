@@ -3,6 +3,8 @@ module.exports = (context) => {
     const merge = require('webpack-merge');
 
     const ExtractTextPlugin = require('extract-text-webpack-plugin');
+    const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
+    
     const PluginPresetHtml = require('./plugin-preset-html');
 
     // reset context
@@ -15,6 +17,16 @@ module.exports = (context) => {
     const commonWebpackConfig = require('./webpack.common')(context);
 
     const finalWebpackConfig = merge(commonWebpackConfig, {
+        mode: 'production',
+        optimization: {
+            minimizer: [
+                new UglifyJsPlugin({
+                    uglifyOptions: {
+                        compress: true
+                    }
+                })
+            ] 
+        },
         module: {
             rules: [
                 {
@@ -67,19 +79,9 @@ module.exports = (context) => {
                     NODE_ENV: '"production"',
                 },
             }),
-            new webpack.optimize.UglifyJsPlugin({
-                compress: {
-                    warnings: true,
-                },
-            }),
             new ExtractTextPlugin({
                 filename: '[name].css',
                 disable: false,
-            }),
-            new webpack.optimize.UglifyJsPlugin({
-                compress: {
-                    warnings: true,
-                },
             }),
         ],
     });

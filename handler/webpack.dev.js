@@ -25,18 +25,21 @@ module.exports = (context) => {
         commonWebpackConfig.entry[key].unshift(`webpack-dev-server/client?http://localhost:${port}`, 'webpack/hot/dev-server');
     });
 
+    const VueLoaderPlugin = require('vue-loader/lib/plugin')
+
     let onbuildLogTimer = null;
     const finalWebpackConfig = merge.smart(commonWebpackConfig, {
+        mode: 'development',
         module: {
             rules: [
                 {
                     test: /\.css$/,
                     use: ['vue-style-loader', 'css-loader', 'postcss-loader'],
-                    enforce: 'post'
+                    // enforce: 'post'
                 }, {
                     test: /\.less$/,
                     use: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
-                    enforce: 'post'
+                    // enforce: 'post'
                 }, {
                     test: /\.vue$/,
                     loader: 'vue-loader',
@@ -47,11 +50,12 @@ module.exports = (context) => {
                             less: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
                         },
                     },
-                    enforce: 'post'
+                    // enforce: 'post'
                 }
             ]
         },
         plugins: [
+            new VueLoaderPlugin(),
             new PluginPresetHtml({
                 srcDir,
                 distDir,
