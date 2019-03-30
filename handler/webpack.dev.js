@@ -14,17 +14,43 @@ module.exports = (context) => {
     // reset context
     const userConfig = require('./util-get-user-config')({ ...context, webpack, WebpackDevServer });
 
-    const { fastConfig } = userConfig;
-    const { replace } = fastConfig;
+    // 覆盖默认的 context 配置
+    Object.assign(context, userConfig);
 
-    Object.assign(context, userConfig.context);
+    const { srcDir, distDir, taskName, port, replace } = context;
 
-    const { srcDir, distDir, taskName, port } = context;
+    const commonWebpackConfig = require('./webpack.common')(context);
 
-    const common = require('./webpack.common')({ context, fastConfig });
+    Object.keys(commonWebpackConfig.entry).forEach((key) => {
+        commonWebpackConfig.entry[key].unshift(`webpack-dev-server/client?http://localhost:${port}`, 'webpack/hot/dev-server');
+    });
 
     let onbuildLogTimer = null;
-    const finalWebpackConfig = merge.smart(common, {
+    const finalWebpackConfig = merge.smart(commonWebpackConfig, {
+        module: {
+            rules: [
+                {
+                    test: /\.css$/,
+                    use: ['vue-style-loader', 'css-loader', 'postcss-loader'],
+                    enforce: 'post'
+                }, {
+                    test: /\.less$/,
+                    use: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
+                    enforce: 'post'
+                }, {
+                    test: /\.vue$/,
+                    loader: 'vue-loader',
+                    include: [srcDir],
+                    options: {
+                        loaders: {
+                            css: ['vue-style-loader', 'css-loader', 'postcss-loader'],
+                            less: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
+                        },
+                    },
+                    enforce: 'post'
+                }
+            ]
+        },
         plugins: [
             new PluginPresetHtml({
                 srcDir,
@@ -34,11 +60,12 @@ module.exports = (context) => {
                 taskName,
             }),
             new PluginCreateBlankCss({
-                entryObj: common.entry,
+                entryObj: commonWebpackConfig.entry,
                 targetDir: path.join(distDir, 'static'),
             }),
             new webpack.HotModuleReplacementPlugin(),
             new WebpackOnBuildPlugin(() => {
+                clearTimeout(onbuildLogTimer);
                 onbuildLogTimer = setTimeout(() => {
                     // 遍历 build 目录
                     const pagesDir = path.join(distDir, 'pages');
@@ -59,28 +86,6 @@ module.exports = (context) => {
             }),
             new WriteFilePlugin(),
         ],
-    });
-
-    finalWebpackConfig.module.rules.unshift({
-            test: /\.css$/,
-            use: ['vue-style-loader', 'css-loader', 'postcss-loader'],
-        }, {
-            test: /\.less$/,
-            use: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
-        }, {
-            test: /\.vue$/,
-            loader: 'vue-loader',
-            include: [srcDir],
-            options: {
-                loaders: {
-                    css: ['vue-style-loader', 'css-loader', 'postcss-loader'],
-                    less: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
-                },
-            },
-        });
-
-    Object.keys(finalWebpackConfig.entry).forEach((key) => {
-        finalWebpackConfig.entry[key].unshift(`webpack-dev-server/client?http://localhost:${port}`, 'webpack/hot/dev-server');
     });
 
     const server = new WebpackDevServer(webpack(finalWebpackConfig), {

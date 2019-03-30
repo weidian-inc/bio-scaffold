@@ -1,7 +1,4 @@
-module.exports = ({ context, fastConfig }) => {
-    const { srcDir, distDir, taskName } = context;
-    const { replace, webpackConfig } = fastConfig;
-
+module.exports = ({ srcDir, distDir, taskName, replace, webpackConfig }) => {
     const webpack = require('webpack');
     const path = require('path');
     const fs = require('fs');
@@ -9,21 +6,19 @@ module.exports = ({ context, fastConfig }) => {
     const merge = require('webpack-merge');
 
     const PluginClean = require('./plugin-clean');
+    const getPagesDir = require('./util-get-pages-dir');
 
     const getEntryObj = () => {
         const entryFiles = {};
-        const pageDir = path.join(srcDir, 'pages');
+        const pagesDir = getPagesDir(srcDir);
 
-        fs.readdirSync(pageDir).forEach((file) => {
-            const state = fs.statSync(path.join(pageDir, file));
+        fs.readdirSync(pagesDir).forEach((file) => {
+            const state = fs.statSync(path.join(pagesDir, file));
             const dirname = path.basename(file);
-            const indexFile = path.join(srcDir, 'pages', dirname, 'index.js');
+            const indexFile = path.join(pagesDir, dirname, 'index.js');
 
             if (state.isDirectory(file) && fs.existsSync(indexFile)) {
-                entryFiles[`${dirname}/index`] = [
-                    'babel-polyfill',
-                    indexFile
-                ];
+                entryFiles[`${dirname}/index`] = [ indexFile ];
             }
         });
 

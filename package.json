@@ -1,5 +1,19 @@
 {
-    "optionalDependencies": {
+    "name": "bio-scaffold",
+    "description": "a powerful scaffold",
+    "license": "ISC",
+    "main": "index.js",
+    "maintainers": [
+        {
+            "name": "liuyuanyang",
+            "email": "liuyuanyangscript@gmail.com",
+            "url": "https://github.com/hoperyy"
+        }
+    ],
+    "engines": {
+        "node": ">=8.9.1"
+    },
+    "dependencies": {
         "autoprefixer": "^7.2.2",
         "babel-core": "^6.26.0",
         "babel-loader": "^7.1.2",
@@ -37,22 +51,5 @@
         "webpack-merge": "^4.1.1",
         "write-file-webpack-plugin": "^4.2.0"
     },
-    "description": "A bio scaffold",
-    "license": "ISC",
-    "main": "index.js",
-    "maintainers": [
-        {
-            "name": "liuyuanyang",
-            "email": "liuyuanyangscript@gmail.com",
-            "url": "https://github.com/hoperyy"
-        }
-    ],
-    "engines": {
-        "node": ">=8.9.1"
-    },
-    "scripts": {
-        "prepublish": "cp ./package.json ./.package.json && cp ./package-lock.json ./.package-lock.json"
-    },
-    "name": "bio-scaffold-vue",
     "version": "1.0.18"
 }

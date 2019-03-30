@@ -4,7 +4,7 @@
 
 module.exports = ({ userDir, srcDir, distDir, taskName, webpack, webpackDevServer }) => {
     return {
-        distDir: './dist', // dist dir; default is './dist'
+        // distDir: './dist', // dist dir; default is './dist'
 
         // port: 9000, // debug port; default is 9000
 

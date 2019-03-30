@@ -8,16 +8,51 @@ module.exports = (context) => {
     // reset context
     const userConfig = require('./util-get-user-config')({ ...context, webpack });
 
-    const { fastConfig } = userConfig;
-    const { replace } = fastConfig;
+    Object.assign(context, userConfig);
 
-    Object.assign(context, userConfig.context);
+    const { srcDir, distDir, taskName, replace } = context;
 
-    const { srcDir, distDir, taskName } = context;
+    const commonWebpackConfig = require('./webpack.common')(context);
 
-    const common = require('./webpack.common')({ context, fastConfig });
-
-    const finalWebpackConfig = merge(common, {
+    const finalWebpackConfig = merge(commonWebpackConfig, {
+        module: {
+            rules: [
+                {
+                    test: /\.css$/,
+                    use: ExtractTextPlugin.extract({
+                        use: ['css-loader?minimize', 'postcss-loader'],
+                        fallback: 'vue-style-loader',
+                    }),
+                    enforce: 'post'
+                }, {
+                    test: /\.less$/,
+                    use: ExtractTextPlugin.extract({
+                        use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
+                        fallback: 'vue-style-loader',
+                    }),
+                    enforce: 'post'
+                }, {
+                    test: /\.vue$/,
+                    loader: 'vue-loader',
+                    include: [
+                        srcDir,
+                    ],
+                    options: {
+                        loaders: {
+                            css: ExtractTextPlugin.extract({
+                                use: ['css-loader?minimize', 'postcss-loader'],
+                                fallback: 'vue-style-loader',
+                            }),
+                            less: ExtractTextPlugin.extract({
+                                use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
+                                fallback: 'vue-style-loader',
+                            }),
+                        },
+                    },
+                    enforce: 'post'
+                }
+            ]
+        },
         plugins: [
             new PluginPresetHtml({
                 srcDir,
@@ -48,38 +83,6 @@ module.exports = (context) => {
             }),
         ],
     });
-
-    finalWebpackConfig.module.rules.unshift({
-            test: /\.css$/,
-            use: ExtractTextPlugin.extract({
-                use: ['css-loader?minimize', 'postcss-loader'],
-                fallback: 'vue-style-loader',
-            }),
-        }, {
-            test: /\.less$/,
-            use: ExtractTextPlugin.extract({
-                use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
-                fallback: 'vue-style-loader',
-            }),
-        }, {
-            test: /\.vue$/,
-            loader: 'vue-loader',
-            include: [
-                srcDir,
-            ],
-            options: {
-                loaders: {
-                    css: ExtractTextPlugin.extract({
-                        use: ['css-loader?minimize', 'postcss-loader'],
-                        fallback: 'vue-style-loader',
-                    }),
-                    less: ExtractTextPlugin.extract({
-                        use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
-                        fallback: 'vue-style-loader',
-                    }),
-                },
-            },
-        });
 
     console.log('Compiling...');
     webpack(finalWebpackConfig, (err) => {

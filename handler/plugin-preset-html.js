@@ -4,9 +4,8 @@ const gulpReplace = require('gulp-replace');
 const rename = require('gulp-rename');
 const htmlmin = require("gulp-htmlmin");
 
-function buildHtml({ srcDir, distDir, watch, taskName, replace, compress }) {
-    const distDirName = distDir.replace(/\/$/, '').split('/').pop();
-    let stream = gulp.src([`!${path.join(srcDir, 'node_modules/**/*')}`, `!${path.join(srcDir, distDirName, '/**/*')}`, `!${path.join(distDir, '/**/*.html')}`, path.join(srcDir, '/pages/**/*.html')]);
+function buildHtml({ srcDir, distDir, taskName, replace, compress }) {
+    let stream = gulp.src([path.join(srcDir, '/pages/**/*.html')]);
 
     if (replace) {
         Object.keys(replace).forEach((key) => {
@@ -14,22 +13,21 @@ function buildHtml({ srcDir, distDir, watch, taskName, replace, compress }) {
         });
     }
 
+    stream = stream.pipe(rename((_path) => {
+        _path.basename = _path.dirname;
+        _path.dirname = '';
+    }));
+
     if (compress) {
-        stream.pipe(rename((_path) => {
-            _path.basename = _path.dirname;
-            _path.dirname = '';
-        })).pipe(htmlmin({
+        stream = stream.pipe(htmlmin({
             minifyJS: true,
             minifyCSS: true,
             collapseWhitespace: true,
             removeComments: true
-        })).pipe(gulp.dest(path.join(distDir, 'pages')));
-    } else {
-        stream.pipe(rename((_path) => {
-            _path.basename = _path.dirname;
-            _path.dirname = '';
-        })).pipe(gulp.dest(path.join(distDir, 'pages')));
+        }));
     }
+
+    stream = stream.pipe(gulp.dest(path.join(distDir, 'pages')));
 }
 
 function PresetHtml({ srcDir, distDir, watch, taskName, replace, compress }) {
