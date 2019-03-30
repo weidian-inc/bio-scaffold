@@ -4,7 +4,7 @@ module.exports = (context) => {
 
     const ExtractTextPlugin = require('extract-text-webpack-plugin');
     const UglifyJsPlugin = require('uglifyjs-webpack-plugin');
-    
+
     const PluginPresetHtml = require('./plugin-preset-html');
 
     // reset context
@@ -18,15 +18,15 @@ module.exports = (context) => {
 
     const finalWebpackConfig = merge(commonWebpackConfig, {
         mode: 'production',
-        optimization: {
-            minimizer: [
-                new UglifyJsPlugin({
-                    uglifyOptions: {
-                        compress: true
-                    }
-                })
-            ] 
-        },
+        // optimization: {
+        //     minimizer: [
+        //         new UglifyJsPlugin({
+        //             uglifyOptions: {
+        //                 compress: true
+        //             }
+        //         })
+        //     ] 
+        // },
         module: {
             rules: [
                 {
@@ -74,11 +74,11 @@ module.exports = (context) => {
                 replace,
                 taskName,
             }),
-            new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: '"production"',
-                },
-            }),
+            // new webpack.DefinePlugin({
+            //     'process.env': {
+            //         NODE_ENV: '"production"',
+            //     },
+            // }),
             new ExtractTextPlugin({
                 filename: '[name].css',
                 disable: false,

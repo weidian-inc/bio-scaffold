@@ -53,9 +53,18 @@ module.exports = ({ srcDir, distDir, taskName, replace, webpackConfig }) => {
             chunkFilename: '[name].js',
         },
         optimization: {
-            splitChunks: {
-                name: 'common.js'
-            }
+            // splitChunks: {
+            //     // name: 'common.js',
+            //     cacheGroups: {
+            //         commons: {
+            //             chunks: "initial",
+            //             minChunks: 2,
+            //             maxInitialRequests: 5, // The default limit is too small to showcase the effect
+            //             minSize: 0 ,
+            //             name: "commons"
+            //         },
+            //     }
+            // }
         },
         module: {
             rules: [{
