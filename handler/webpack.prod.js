@@ -17,7 +17,7 @@ module.exports = (context) => {
     const commonWebpackConfig = require('./webpack.common')(context);
 
     const finalWebpackConfig = merge(commonWebpackConfig, {
-        mode: 'production',
+        // mode: 'production',
         // optimization: {
         //     minimizer: [
         //         new UglifyJsPlugin({
@@ -35,14 +35,14 @@ module.exports = (context) => {
                         use: ['css-loader?minimize', 'postcss-loader'],
                         fallback: 'vue-style-loader',
                     }),
-                    enforce: 'post'
+                    // enforce: 'post'
                 }, {
                     test: /\.less$/,
                     use: ExtractTextPlugin.extract({
                         use: ['css-loader?minimize', 'postcss-loader', 'less-loader'],
                         fallback: 'vue-style-loader',
                     }),
-                    enforce: 'post'
+                    // enforce: 'post'
                 }, {
                     test: /\.vue$/,
                     loader: 'vue-loader',
@@ -61,7 +61,7 @@ module.exports = (context) => {
                             }),
                         },
                     },
-                    enforce: 'post'
+                    // enforce: 'post'
                 }
             ]
         },
