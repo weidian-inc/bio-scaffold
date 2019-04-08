@@ -1,126 +1,90 @@
-module.exports = ({ srcDir, distDir, taskName, replace, webpackConfig }) => {
+module.exports = (finalConfig) => {
+    const { commonJs, srcFolder, buildFolder, currentEnv, replace, webpackConfig, hashStatic, afterBuild } = finalConfig;
+
     const webpack = require('webpack');
     const path = require('path');
-    const fs = require('fs');
-    const StringReplacePlugin = require('string-replace-webpack-plugin');
     const merge = require('webpack-merge');
+    const WebpackOnBuildPlugin = require('on-build-webpack');
+    const PluginNoop = require('./utils/plugin-noop');
+    const PluginClean = require('./utils/plugin-clean');
 
-    const PluginClean = require('./plugin-clean');
-    const getPagesDir = require('./util-get-pages-dir');
+    let afterBuildDelayTime = null;
 
-    const getEntryObj = () => {
-        const entryFiles = {};
-        const pagesDir = getPagesDir(srcDir);
-
-        fs.readdirSync(pagesDir).forEach((file) => {
-            const state = fs.statSync(path.join(pagesDir, file));
-            const dirname = path.basename(file);
-            const indexFile = path.join(pagesDir, dirname, 'index.js');
-
-            if (state.isDirectory(file) && fs.existsSync(indexFile)) {
-                entryFiles[`${dirname}/index`] = [ indexFile ];
-            }
-        });
-
-        return entryFiles;
-    };
-
-    const getReplaceLoader = (replaceObj) => {
-        const replacements = [];
-
-        Object.keys(replaceObj).forEach((key) => {
-            replacements.push({
-                pattern: new RegExp(key.replace(/\$/g, '\\$'), 'g'),
-                replacement() {
-                    return replaceObj[key][taskName];
-                },
-            });
-        });
-
-        return StringReplacePlugin.replace({
-            replacements,
-        });
-    };
-
-    
-
-    let commonWebpackConfig = {
-        entry: getEntryObj(),
-        output: {
-            path: path.join(distDir, '/static/'),
-            filename: '[name].js',
-            publicPath: '/static/',
-            chunkFilename: '[name].js',
-        },
-        optimization: {
-            // splitChunks: {
-            //     // name: 'common.js',
-            //     cacheGroups: {
-            //         commons: {
-            //             chunks: "initial",
-            //             minChunks: 2,
-            //             maxInitialRequests: 5, // The default limit is too small to showcase the effect
-            //             minSize: 0 ,
-            //             name: "commons"
-            //         },
-            //     }
-            // }
-        },
-        module: {
-            rules: [{
-                test: /\.jpg$/,
-                use: 'url-loader?name=img/[hash].[ext]&mimetype=image/jpg&limit=8000',
-            }, {
-                test: /\.png$/,
-                use: 'url-loader?name=img/[hash].[ext]&mimetype=image/png&limit=8000',
-            }, {
-                test: /\.gif$/,
-                use: 'url-loader?name=img/[hash].[ext]&mimetype=image/gif&limit=8000',
-            }, {
-                test: /\.(woff|svg|eot|ttf)\??.*$/,
-                use: 'url-loader?name=img/[hash].[ext]&limit=10',
-            }, {
-                test: /\.js$/,
-                loader: 'babel-loader',
-                include: [
-                    srcDir,
-                ],
-            }, {
-                test: /\.[(js)(html)]*$/,
-                exclude: /(node_modules|bower_components)/,
-                loader: getReplaceLoader(replace, taskName),
-            }],
-        },
-        resolve: {
-            alias: {
-                vue: 'vue/dist/vue.common.js',
+    let commonWebpackConfig = merge({
+            entry: Object.assign((commonJs ? { vendor: ['vue', 'core-js'] } : {}), require('./utils/util-get-entry-obj')(finalConfig)),
+            output: {
+                path: path.join(buildFolder, '/static/'),
+                filename: hashStatic ? '[name].[chunkhash].js' : '[name].js',
+                publicPath: '/static/',
+                chunkFilename: hashStatic ? '[name].[chunkhash].js' : '[name].js',
             },
-            modules: [
-                path.resolve(srcDir, 'node_modules/'),
-                path.resolve(__dirname, '../node_modules/'),
-            ],
-        },
-        resolveLoader: {
-            modules: [
-                path.resolve(srcDir, 'node_modules/'),
-                path.resolve(__dirname, '../node_modules/'),
-            ],
-        },
-        plugins: [
-            new PluginClean({
-                distDir,
-            }),
-            
-            // new webpack.optimize.CommonsChunkPlugin({
-            //     name: 'vendor',
-            //     filename: 'common.js',
-            //     minChunks: Infinity,
-            // }),
-        ],
-    };
+            module: {
+                rules: [{
+                    test: /\.(jpg|png|gif)$/,
+                    use: 'url-loader?name=img/[hash].[ext]&limit=8000',
+                    enforce: 'post'
+                }, {
+                    test: /\.(woff|svg|eot|ttf)\??.*$/,
+                    use: 'url-loader?name=img/[hash].[ext]&limit=10',
+                    enforce: 'post'
+                }, {
+                    test: /\.js$/,
+                    loader: 'babel-loader',
+                    enforce: 'post',
+                    exclude: {
+                        test: [
+                            path.join(srcFolder, 'node_modules'),
+                            path.join(__dirname, '../node_modules')
+                        ],
+                        exclude: [
+                            
+                        ]
+                    }
+                }, {
+                    test: /\.[(js)(vue)(vuex)(tpl)(html)]*$/,
+                    enforce: 'pre',
+                    exclude: /(node_modules|bower_components)/,
+                    loader: require('./utils/util-get-replace-loader')(replace, currentEnv),
+                }],
+            },
+            resolve: {
+                modules: [
+                    path.resolve(srcFolder, 'node_modules/'),
+                    path.resolve(__dirname, '../node_modules/'),
+                ],
+                extensions: ['.js', '.json', '.vue']
+            },
+            resolveLoader: {
+                modules: [
+                    path.resolve(srcFolder, 'node_modules/'),
+                    path.resolve(__dirname, '../node_modules/'),
+                ],
+            },
+            plugins: [
+                new PluginClean({
+                    buildFolder
+                }),
+                afterBuild ? new WebpackOnBuildPlugin(() => {
+                    clearTimeout(afterBuildDelayTime);
 
-    // merge fast config
-    commonWebpackConfig = merge(commonWebpackConfig, webpackConfig);
+                    afterBuildDelayTime = setTimeout(() => {
+                        afterBuild(buildFolder);
+                        clearTimeout(afterBuildDelayTime);
+                    }, 500);
+                }) : new PluginNoop(),
+                hashStatic ? new webpack.HashedModuleIdsPlugin() : new PluginNoop()
+            ],
+        }, webpackConfig);
+
+    // 默认是有 vendor 配置的，如果用户不希望生成 common.js，则删去默认的 vendor
+    if (!finalConfig.commonJs) {
+        delete commonWebpackConfig.entry.vendor;
+    }
+
+    // 如果用户设置了 vendor，则覆盖默认的 vendor
+    if (webpackConfig && webpackConfig.entry && webpackConfig.entry.vendor) {
+        commonWebpackConfig.entry.vendor = webpackConfig.entry.vendor;
+    }
 
     return commonWebpackConfig;
 };

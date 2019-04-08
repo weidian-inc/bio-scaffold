@@ -1,112 +1,127 @@
-module.exports = (context) => {
+module.exports = async ({ userFolder, srcFolder, buildFolder, currentEnv, debugPort }) => {
+    const VUE_PATH = 'vue/dist/vue.js';
+
+    const path = require('path');
+    const fs = require('fs');
+    const fse = require('fs-extra');
     const webpack = require('webpack');
+
+    // 监听 webpack 构建结束的插件
     const WebpackOnBuildPlugin = require('on-build-webpack');
     const merge = require('webpack-merge');
     const WebpackDevServer = require('webpack-dev-server');
 
-    const PluginCreateBlankCss = require('./plugin-create-blank-css');
-    const PluginPresetHtml = require('./plugin-preset-html');
+    const logUtil = require('./utils/util-log');
+
+    // 解析包资源大小的插件
     const WriteFilePlugin = require('write-file-webpack-plugin');
+    const PluginCreateBlankCss = require('./utils/plugin-create-blank-css');
+    const PluginNoop = require('./utils/plugin-noop');
 
-    const fs = require('fs');
-    const path = require('path');
+    const finalConfig = require('./utils/util-merge')(
+        { userFolder, srcFolder, buildFolder, currentEnv, debugPort }, 
+        await require('./utils/util-get-user-config')({ userFolder, srcFolder, buildFolder, currentEnv, debugPort, webpack, WebpackDevServer, mode: 'development' })
+    );
 
-    // reset context
-    const userConfig = require('./util-get-user-config')({ ...context, webpack, WebpackDevServer });
+    const { cssLoaders, lessLoaders, sassLoaders } = require('./utils/util-get-style-loaders').getDev(finalConfig);
 
-    // 覆盖默认的 context 配置
-    Object.assign(context, userConfig);
-
-    const { srcDir, distDir, taskName, port, replace } = context;
-
-    const commonWebpackConfig = require('./webpack.common')(context);
-
-    Object.keys(commonWebpackConfig.entry).forEach((key) => {
-        commonWebpackConfig.entry[key].unshift(`webpack-dev-server/client?http://localhost:${port}`, 'webpack/hot/dev-server');
-    });
-
-    const VueLoaderPlugin = require('vue-loader/lib/plugin')
-
-    let onbuildLogTimer = null;
-    const finalWebpackConfig = merge.smart(commonWebpackConfig, {
-        mode: 'development',
-        module: {
-            rules: [
-                {
-                    test: /\.css$/,
-                    use: ['vue-style-loader', 'css-loader', 'postcss-loader'],
-                    // enforce: 'post'
-                }, {
-                    test: /\.less$/,
-                    use: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
-                    // enforce: 'post'
-                }, {
-                    test: /\.vue$/,
-                    loader: 'vue-loader',
-                    include: [srcDir],
-                    options: {
-                        loaders: {
-                            css: ['vue-style-loader', 'css-loader', 'postcss-loader'],
-                            less: ['vue-style-loader', 'css-loader', 'postcss-loader', 'less-loader'],
-                        },
-                    },
-                    // enforce: 'post'
-                }
+    const finalWebpackConfig = merge.smart(require('./webpack.common')(finalConfig), {
+            resolve: {
+                alias: {
+                    'vue$': VUE_PATH,
+                },
+            },
+            module: {
+                rules: [{
+                        test: /\.css$/,
+                        use: cssLoaders,
+                    }, {
+                        test: /\.less$/,
+                        use: lessLoaders,
+                    }, {
+                        test: /\.(scss|sass)$/,
+                        use: sassLoaders,
+                    }, {
+                        test: /\.vue$/,
+                        use: [{
+                                loader: 'vue-loader',
+                                options: {
+                                    loaders: {
+                                        css: cssLoaders,
+                                        less: lessLoaders,
+                                        sass: sassLoaders
+                                    },
+                                },
+                            },
+                        ],
+                        include: [
+                            finalConfig.srcFolder,
+                        ],
+                    }]
+            },
+            plugins: [
+                new PluginCreateBlankCss({
+                    entryObj: require('./utils/util-get-entry-obj')(finalConfig),
+                    targetDir: path.join(finalConfig.buildFolder, 'static')
+                }),
+                new WriteFilePlugin(),
+                (finalConfig.commonJs && finalConfig.hashStatic) ? new webpack.optimize.CommonsChunkPlugin({ name: 'vendor', minChunks: Infinity, }) : new PluginNoop(),
+                (finalConfig.commonJs && finalConfig.hashStatic) ? new webpack.optimize.CommonsChunkPlugin({ name: 'manifest', chunks: ['vendor'] }) : new PluginNoop(),
+                (finalConfig.commonJs && !finalConfig.hashStatic) ? new webpack.optimize.CommonsChunkPlugin({ name: 'vendor', filename: 'common.js', minChunks: Infinity, }) : new PluginNoop(),
             ]
-        },
-        plugins: [
-            new VueLoaderPlugin(),
-            new PluginPresetHtml({
-                srcDir,
-                distDir,
-                watch: true,
-                replace,
-                taskName,
-            }),
-            new PluginCreateBlankCss({
-                entryObj: commonWebpackConfig.entry,
-                targetDir: path.join(distDir, 'static'),
-            }),
+        });
+
+    // 启动 html 监听程序
+    require('./utils/util-process-html')({ ...finalConfig, watch: true, });
+
+    logUtil.log(`webpack: Compiling...`);
+
+    // 启动 webpack
+    if (finalConfig.noWebpackDevServer) {
+        finalWebpackConfig.watch = true;
+        webpack(finalWebpackConfig, (err) => {
+            if (err) {
+                logUtil.error('Compilication failed.');
+
+                console.error(err.stack || err);
+                if (err.details) {
+                    console.error(err.details);
+                }
+                process.exit(1);
+                return;
+            }
+
+            logUtil.log('Compilication done.');
+        });
+        require('./utils/util-check-restart')({ finalConfig });
+    } else {
+        finalWebpackConfig.plugins.push(
             new webpack.HotModuleReplacementPlugin(),
             new WebpackOnBuildPlugin(() => {
-                clearTimeout(onbuildLogTimer);
-                onbuildLogTimer = setTimeout(() => {
-                    // 遍历 build 目录
-                    const pagesDir = path.join(distDir, 'pages');
-                    if (fs.existsSync(pagesDir) && fs.statSync(pagesDir)) {
-                        const pages = fs.readdirSync(pagesDir);
-                        const str = pages.map(pagePath => `http://localhost:${port}/pages/${pagePath}`).join('\n');
+                require('./utils/util-show-log-after-build')(finalConfig);
+            })
+        );
+        Object.keys(finalWebpackConfig.entry).forEach((key) => {
+            if (key !== 'vendor' && typeof finalWebpackConfig.entry[key].unshift === 'function') {
+                finalWebpackConfig.entry[key].unshift(`webpack-dev-server/client?http://localhost:${finalConfig.debugPort}`, 'webpack/hot/dev-server');
+            }
+        });
+        const webpackServer = new WebpackDevServer(webpack(finalWebpackConfig), {
+            contentBase: finalConfig.buildFolder,
+            // hot: true,
+            historyApiFallback: true,
+            quiet: false,
+            noInfo: false,
+            stats: 'errors-only',
+            publicPath: finalWebpackConfig.output.publicPath,
+            disableHostCheck: true,
+            watchOptions: {
+                ignored: /\/node_modules\//,
+                poll: 300,
+            },
+        });
 
-                        if (pages.length === 0) {
-                            console.log(`no pages found...`.yellow);
-                        } else if (pages.length === 1) {
-                            pages.map(pagePath => console.log(`${'[debug url]'.green} http://localhost:${port}/pages/${pagePath}`));
-                        } else {
-                            pages.map((pagePath, index) => console.log(`${('[debug url ' + index + ']').green} http://localhost:${port}/pages/${pagePath}`));
-                        }
-                    }
-                    clearTimeout(onbuildLogTimer);
-                }, 1000);
-            }),
-            new WriteFilePlugin(),
-        ],
-    });
-
-    const server = new WebpackDevServer(webpack(finalWebpackConfig), {
-        contentBase: distDir,
-        hot: true,
-        historyApiFallback: true,
-        quiet: false,
-        noInfo: false,
-        stats: 'errors-only',
-        publicPath: finalWebpackConfig.output.publicPath,
-        disableHostCheck: true,
-        watchOptions: {
-            ignored: /\/node_modules\//,
-            poll: 300,
-        },
-    });
-
-    console.log('webpack: Compiling...');
-    server.listen(port);
+        webpackServer.listen(finalConfig.debugPort);
+        require('./utils/util-check-restart')({ webpackServer, finalConfig });
+    }
 };

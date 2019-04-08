@@ -1,11 +1,8 @@
+.git/
+.idea/
+.gitignore
 .DS_Store
-.git
-*.zip
-*.gzip
-.idea
-.svn
-*.log
-node_modules
-bower_components
+node_modules/*
+npm-debug.log
 workspace/*
-package-lock.json
+*.swp
