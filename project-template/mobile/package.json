@@ -12,5 +12,6 @@
   },
   "devDependencies": {
     "bio-cli": "^1.0.3"
-  }
+  },
+  "bio-scaffold": "bio-scaffold"
 }
