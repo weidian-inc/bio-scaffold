@@ -28,7 +28,7 @@ module.exports = (finalConfig) => {
                     use: 'url-loader?name=img/[hash].[ext]&limit=10',
                     enforce: 'post'
                 }, {
-                    test: /\.js$/,
+                    test: /(\.js$)|(\.jsx$)/,
                     loader: 'babel-loader',
                     enforce: 'post',
                     exclude: {
@@ -41,7 +41,7 @@ module.exports = (finalConfig) => {
                         ]
                     }
                 }, {
-                    test: /\.[(js)(vue)(vuex)(tpl)(html)]*$/,
+                    test: /\.[(js)(vue)(vuex)(jsx)(tpl)(html)]*$/,
                     enforce: 'pre',
                     exclude: /(node_modules|bower_components)/,
                     loader: require('./utils/util-get-replace-loader')(replace, currentEnv),
@@ -52,7 +52,7 @@ module.exports = (finalConfig) => {
                     path.resolve(srcFolder, 'node_modules/'),
                     path.resolve(__dirname, '../node_modules/'),
                 ],
-                extensions: ['.js', '.json', '.vue']
+                extensions: ['.js', '.json', '.vue', '.jsx']
             },
             resolveLoader: {
                 modules: [
@@ -72,7 +72,10 @@ module.exports = (finalConfig) => {
                         clearTimeout(afterBuildDelayTime);
                     }, 500);
                 }) : new PluginNoop(),
-                hashStatic ? new webpack.HashedModuleIdsPlugin() : new PluginNoop()
+                hashStatic ? new webpack.HashedModuleIdsPlugin() : new PluginNoop(),
+                new webpack.ProvidePlugin({
+                    React: 'react',
+                }),
             ],
         }, webpackConfig);
 

@@ -11,7 +11,7 @@
     "scripts": {
         "prepublish": "cp ./package.json ./.package.json && cp ./package-lock.json ./.package-lock.json"
     },
-    "version": "3.0.0",
+    "version": "2.0.1",
     "dependencies": {
         "autoprefixer": "^9.1.5",
         "babel-core": "6.26.0",
